@@ -11,4 +11,5 @@ add_subdirectory(../luabind "${CMAKE_CURRENT_BINARY_DIR}/luabind")
 include_directories ("${luabind_Includes}")
 
 add_executable (Tests main.cpp)
+target_link_libraries(Tests ${luabind_Deps})
 #target_link_libraries (Tests RPN)

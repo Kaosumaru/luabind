@@ -17,13 +17,20 @@ macro (add_sources)
 endmacro()
 
 macro (add_folder name)
-add_subdirectory(${name})
-string(REPLACE "/" "\\" filtername ${name})
-source_group(${filtername} FILES ${files})
+  add_subdirectory(${name})
+  string(REPLACE "/" "\\" filtername ${name})
+  source_group(${filtername} FILES ${files})
 endmacro()
 
 project (luabind)
-set(luabind_Includes ${PROJECT_SOURCE_DIR} PARENT_SCOPE)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Modules CACHE TYPE STRING FORCE)
+
+include_directories( ${LUA_INCLUDE_DIR} )
+set(luabind_Includes ${PROJECT_SOURCE_DIR} ${LUA_INCLUDE_DIR} PARENT_SCOPE)
+set(luabind_Deps ${LUA_LIBRARY} PARENT_SCOPE)
+#set(LUA_DIR ${PROJECT_SOURCE_DIR}/../lua/ )
+#include("${LUA_DIR}/CMakeLists.txt")
+#include(FindLua)
 
 if (MSVC)
 add_definitions( "/W3 /D_CRT_SECURE_NO_WARNINGS /wd4018 /wd4005 /wd4996 /nologo" )
@@ -32,5 +39,5 @@ endif(MSVC)
 ##folders
 add_folder(luabind)
 
-
 add_library(luabind ${PROJECT_SRCS})
+target_link_libraries(luabind ${LUA_LIBRARY})

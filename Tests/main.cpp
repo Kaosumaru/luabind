@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdexcept>
+#include <lua.hpp>
 
 #ifndef _MSC_VER
 #define lest_FEATURE_COLOURISE 1
@@ -19,6 +20,12 @@ const lest::test specification[] =
 
 	},
 };
+
+void init_lua()
+{
+    lua_State *state = luaL_newstate();
+    lua_close( state );
+}
 
 int main (int argc, char * argv[])
 {
