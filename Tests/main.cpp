@@ -7,7 +7,7 @@
 #endif
 
 #include "lest.hpp"
-#include "luabind/StackStreamCaller.hpp"
+#include "luabind/luabind.hpp"
 
 using namespace std;
 
