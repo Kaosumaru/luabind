@@ -6,14 +6,16 @@ project (Tests)
 if (MSVC)
 	add_definitions( "/W3 /D_CRT_SECURE_NO_WARNINGS /wd4018 /wd4005 /wd4996 /nologo" )
 else (MSVC)
-	add_definitions( "/Dlest_FEATURE_COLOURISE" )
+
 endif(MSVC)
 
+add_definitions( "/Dlest_FEATURE_COLOURISE" )
 add_definitions( "/Dlest_FEATURE_AUTO_REGISTER" )
+add_definitions( "/DSOURCE_DIR=\"${CMAKE_SOURCE_DIR}\"" )
 
 add_subdirectory(../luabind "${CMAKE_CURRENT_BINARY_DIR}/luabind")
 include_directories ("${luabind_Includes}")
 
-add_executable (Tests main.cpp simple_tests.cpp)
+add_executable (Tests main.cpp simple_tests.cpp lest_helper.hpp)
 target_link_libraries(Tests ${luabind_Deps})
 #target_link_libraries (Tests RPN)
