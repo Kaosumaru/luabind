@@ -9,6 +9,7 @@ namespace luabind
     class LuaState
     {
     public:
+        using lua_function = int(*) (lua_State *L);
         LuaState()
         {
             _L = luaL_newstate();
@@ -38,6 +39,12 @@ namespace luabind
         {
             if (lua_pcall(_L, 0, LUA_MULTRET, 0) != LUA_OK)
                 report_error();
+        }
+
+        void register_global_function(const char* name, lua_function function)
+        {
+            lua_pushcfunction(_L, function);
+            lua_setglobal(_L, name);
         }
     protected:
         void report_error()

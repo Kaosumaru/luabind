@@ -1,7 +1,7 @@
 #ifndef __STREAMCALLER_HPP__
 #define __STREAMCALLER_HPP__
 #include <utility>
-
+#include "function_traits.hpp"
 
 using namespace std;
 
@@ -16,6 +16,7 @@ struct StackStreamCaller
 template<typename Stream, typename R, typename ...Args>
 struct StackStreamCaller<Stream, R(Args...)>
 {
+    constexpr static int return_arity = std::is_void<Args>::value ? 0 : 1;
     using ReturnType = R;
     constexpr static int Arity = sizeof...(Args);
 
@@ -25,7 +26,7 @@ struct StackStreamCaller<Stream, R(Args...)>
     * @return Forwards return value from function.
     */
     template<typename Function>
-    R Call(Stream &stream, const Function& function)
+    static ReturnType Call(Stream &stream, const Function& function)
     {
         return CallImpl(stream, function, std::index_sequence_for<Args...>());
     }
@@ -38,7 +39,7 @@ protected:
     * @return Forwards return value from function.
     */
     template<std::size_t... Is, typename Function>
-    R CallImpl(Stream &s, const Function& f, std::index_sequence<Is...>)
+    static ReturnType CallImpl(Stream &s, const Function& f, std::index_sequence<Is...>)
     {
         constexpr int arity_dec = Arity - 1;
 
@@ -57,12 +58,22 @@ protected:
     }
 };
 
+template <typename Stream, typename Func>
+auto CallerFromStream(Stream& stream, const Func& func)
+{
+    using Signature = typename mtl::function_traits<Func>::decayed_signature;
+    return StackStreamCaller<Stream, Signature>();
+}
 
 template <typename Stream, typename Func>
 auto CallFromStream(Stream& stream, const Func& func)
 {
-    return StackStreamCaller<Stream, Func>().Call(stream, func);
+    using Signature = typename mtl::function_traits<Func>::decayed_signature;
+    return StackStreamCaller<Stream, Signature>().Call(stream, func);
 }
+
+
+
 
 
 #endif

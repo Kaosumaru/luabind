@@ -3,7 +3,7 @@
 namespace 
 {
 
-    CASE("simple_tests" "[pass]")
+    CASE("simple_tests")
     {
         using namespace luabind;
         LuaState s{ SOURCE_DIR"/simple_tests.lua" };
