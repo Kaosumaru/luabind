@@ -1,17 +1,21 @@
 #include <iostream>
 #include <stdexcept>
 #include <lua.hpp>
-
-#ifndef _MSC_VER
-#define lest_FEATURE_COLOURISE 1
-#endif
-
 #include "lest.hpp"
 #include "luabind/luabind.hpp"
 
 using namespace std;
 
 
+#define CASE( name ) lest_CASE( specification(), name )
+
+lest::tests& specification()
+{
+    static lest::tests tests;
+    return tests;
+}
+
+/*
 const lest::test specification[] =
 {
 	CASE("Simplest test")
@@ -20,6 +24,7 @@ const lest::test specification[] =
 
 	},
 };
+*/
 
 void init_lua()
 {
@@ -29,5 +34,5 @@ void init_lua()
 
 int main (int argc, char * argv[])
 {
-	return lest::run(specification, argc, argv);
+	return lest::run(specification(), argc, argv);
 }
