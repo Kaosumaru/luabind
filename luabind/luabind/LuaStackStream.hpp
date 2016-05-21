@@ -21,7 +21,7 @@ namespace luabind
 
 
     //int
-    LuaStackStream& operator >> (LuaStackStream& ss, int& v)
+    inline LuaStackStream& operator >> (LuaStackStream& ss, int& v)
     {
         auto L = ss.LuaState();
         assert(lua_isnumber(L, -1));
@@ -31,7 +31,7 @@ namespace luabind
         return ss;
     }
 
-    LuaStackStream& operator << (LuaStackStream& ss, const int& v)
+    inline LuaStackStream& operator << (LuaStackStream& ss, const int& v)
     {
         lua_pushinteger(ss.LuaState(), v);
         return ss;
@@ -39,7 +39,7 @@ namespace luabind
 
 
     //string
-    LuaStackStream& operator >> (LuaStackStream& ss, std::string& v)
+    inline LuaStackStream& operator >> (LuaStackStream& ss, std::string& v)
     {
         auto L = ss.LuaState();
         assert(lua_isstring(L, -1));
@@ -52,7 +52,7 @@ namespace luabind
         return ss;
     }
 
-    LuaStackStream& operator << (LuaStackStream& ss, const std::string& v)
+    inline LuaStackStream& operator << (LuaStackStream& ss, const std::string& v)
     {
         lua_pushlstring(ss.LuaState(), v.c_str(), v.size());
         return ss;
