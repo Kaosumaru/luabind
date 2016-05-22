@@ -74,7 +74,7 @@ auto CallFromStream(Stream& stream, const Func& func)
 
 
 
-namespace CallFromStream_impl
+namespace CallFromStreamResultToStream_impl
 {
     template<typename R>
     struct Caller
@@ -107,7 +107,7 @@ template <typename Stream, typename Func>
 int CallFromStreamResultToStream(Stream& stream, const Func& func)
 {
     using traits = mtl::function_traits<Func>;
-    return CallFromStream_impl::Caller<traits::return_type>::Call(stream, func);
+    return CallFromStreamResultToStream_impl::Caller<traits::return_type>::Call(stream, func);
 }
 
 
