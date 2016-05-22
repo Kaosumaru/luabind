@@ -3,6 +3,7 @@
 #include "lua.hpp"
 #include "LuaStackStream.hpp"
 #include "StackStreamCaller.hpp"
+#include "mem_fn_shared_ptr.hpp"
 
 namespace luabind
 {
@@ -53,5 +54,11 @@ namespace luabind
 [](lua_State* L) { \
     luabind::LuaStackStream ss{ L }; \
     return CallFromStreamResultToStream(ss, x); \
+}
+
+#define LB_WRAP_MEMBER(x) \
+[](lua_State* L) { \
+    luabind::LuaStackStream ss{ L }; \
+    return CallFromStreamResultToStream(ss, mtl::mem_fn_shared_ptr(x)); \
 }
 

@@ -16,6 +16,6 @@ add_definitions( "/DSOURCE_DIR=\"${CMAKE_SOURCE_DIR}\"" )
 add_subdirectory(../luabind "${CMAKE_CURRENT_BINARY_DIR}/luabind")
 include_directories ("${luabind_Includes}")
 
-add_executable (Tests main.cpp simple_tests.cpp callbacks_tests.cpp functions_tests.cpp shared_ptr_tests.cpp lest_helper.hpp)
+add_executable (Tests main.cpp simple_tests.cpp callbacks_tests.cpp functions_tests.cpp shared_ptr_tests.cpp object_tests.cpp lest_helper.hpp)
 target_link_libraries(Tests ${luabind_Deps})
 #target_link_libraries (Tests RPN)

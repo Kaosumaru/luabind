@@ -2,7 +2,8 @@
 
 #include <lua.hpp>
 #include "State.hpp"
-#include <vector>
+#include <map>
+#include <memory>
 
 namespace luabind
 {
@@ -13,7 +14,7 @@ namespace luabind
     {
     public:
         using lua_function = int(*) (lua_State *L);
-        using FunctionsList = std::vector<std::pair<const char*, lua_function>>;
+        using FunctionsList = std::map<const char*, lua_function>;
 
         MetatableCreator() {}
  
@@ -38,12 +39,12 @@ namespace luabind
 
         static void AddMetamethod(const char* name, lua_function f)
         {
-            s_metamethods.emplace_back(name, f);
+            s_metamethods.emplace( name, f );
         }
 
         static void AddMethod(const char* name, lua_function f)
         {
-            s_methods.emplace_back({ name, f });
+            s_methods.emplace( name, f );
         }
 
         static bool ShouldInit()
@@ -85,6 +86,9 @@ namespace luabind
 
             for(auto& m : s_metamethods)
                 SetField(L, m.first, m.second);
+
+            if (!s_methods.empty())
+                SetField(L, "__index", s_methods);
         }
 
         //pushes our array at stack
@@ -105,6 +109,19 @@ namespace luabind
 
         static FunctionsList s_metamethods;
         static FunctionsList s_methods;
+    };
+
+    template<typename T>
+    struct RegisterObject
+    {
+        using creator = MetatableCreator<std::shared_ptr<T>>;
+        using lua_function = int(*) (lua_State *L);
+
+        auto& method(const char* name, lua_function f)
+        {
+            creator::AddMethod(name, f);
+            return *this;
+        }
     };
 
     template<typename T>
