@@ -41,10 +41,21 @@ namespace luabind
                 report_error();
         }
 
-        void register_global_function(const char* name, lua_function function)
+        template<typename T>
+        void set_global(const char* name, T&& t)
         {
-            lua_pushcfunction(_L, function);
+            stream() << std::forward<T>(t);
             lua_setglobal(_L, name);
+        }
+
+        int size()
+        {
+            return lua_gettop(_L);
+        }
+
+        void force_gc()
+        {
+            lua_gc(_L, LUA_GCCOLLECT, 0);
         }
     protected:
         void report_error()

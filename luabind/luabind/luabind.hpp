@@ -47,22 +47,11 @@ namespace luabind
 
         return ReturnInfo::get(ss);
     }
-
 };
 
 #define LB_MAKE_LUA_WRAPPER(x) \
 [](lua_State* L) { \
     luabind::LuaStackStream ss{ L }; \
-    auto caller = CallerFromStream(ss, x); \
-    ss << caller.Call(ss, x); \
-    return caller.return_arity; \
+    return CallFromStreamResultToStream(ss, x); \
 }
-
-#define LB_MAKE_LUA_WRAPPER_VOID(x) \
-[](lua_State* L) { \
-    luabind::LuaStackStream ss{ L }; \
-    CallFromStream(ss, x); \
-    return 0; \
-}
-
 

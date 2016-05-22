@@ -58,7 +58,14 @@ namespace luabind
         return ss;
     }
 
+    //lua function
+    inline LuaStackStream& operator << (LuaStackStream& ss, int(*v) (lua_State *L))
+    {
+        lua_pushcfunction(ss.LuaState(), v);
+        return ss;
+    }
 
+    //std::vector
     template<typename T>
     LuaStackStream& operator >> (LuaStackStream& ss, std::vector<T>& v)
     {
@@ -96,7 +103,7 @@ namespace luabind
         return ss;
     }
 
-    //map
+    //std::map
     template<typename T1, typename T2>
     LuaStackStream& operator >> (LuaStackStream& ss, std::map<T1, T2>& v)
     {
