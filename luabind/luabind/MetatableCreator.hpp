@@ -3,6 +3,7 @@
 #include <lua.hpp>
 #include "State.hpp"
 #include <map>
+#include <set>
 #include <memory>
 
 namespace luabind
@@ -13,6 +14,9 @@ namespace luabind
     class MetatableCreator
     {
     public:
+        template<typename O>
+        friend class MetatableCreator;
+
         using lua_function = int(*) (lua_State *L);
         using FunctionsList = std::map<const char*, lua_function>;
 
@@ -24,17 +28,28 @@ namespace luabind
 
         static void AssignMetatable(lua_State *L)
         {
+            //assign metatable to obj
             PushOurTable(L);
             lua_setmetatable(L, -2);
+
+            //assign light userdata to obj
+            lua_pushlightuserdata(L, (void*)&_registry_table_index);
+            lua_setuservalue(L, -2);
         }
 
         static bool CheckMetatable(lua_State *L)
         {
-            lua_getmetatable(L, -1);
-            PushOurTable(L);
-            bool result = lua_compare(L, -1, -2, LUA_OPEQ) != 0;
-            lua_pop(L, 2);
-            return result;
+            lua_getuservalue(L, -1);
+            auto pointer = (void*)lua_topointer(L, -1);
+            lua_pop(L, 1);
+
+            if (pointer == table_index())
+                return true;
+
+            if (_inheritance_parent_ids.find(pointer) != _inheritance_parent_ids.end())
+                return true;
+
+            return false;
         }
 
         static void AddMetamethod(const char* name, lua_function f)
@@ -53,6 +68,16 @@ namespace luabind
             auto ret = initialized;
             initialized = true;
             return !ret;
+        }
+
+        template<typename ParentCreator>
+        static void InheritFrom()
+        {
+
+            for (auto& method : ParentCreator::s_methods)
+                s_methods.insert(method);
+
+            ParentCreator::_inheritance_parent_ids.insert(table_index());
         }
     protected:
         template<typename Field>
@@ -106,6 +131,7 @@ namespace luabind
         }
 
         const static int _registry_table_index = 0;
+        static std::set<void*> _inheritance_parent_ids;
 
         static FunctionsList s_metamethods;
         static FunctionsList s_methods;
@@ -122,7 +148,20 @@ namespace luabind
             creator::AddMethod(name, f);
             return *this;
         }
+
+        template<typename ParentType>
+        auto& parent()
+        {
+            static_assert(std::is_base_of<ParentType, T>::value, "ParentType isn't parent of registered object");
+            using parent_creator = MetatableCreator<std::shared_ptr<ParentType>>;
+            creator::InheritFrom<parent_creator>();
+            
+            return *this;
+        }
     };
+
+    template<typename T>
+    typename std::set<void*> MetatableCreator<T>::_inheritance_parent_ids;
 
     template<typename T>
     typename MetatableCreator<T>::FunctionsList MetatableCreator<T>::s_metamethods;
