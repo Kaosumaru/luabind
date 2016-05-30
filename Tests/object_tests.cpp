@@ -86,11 +86,10 @@ namespace
         EXPECT(CallFunction<int>(s.state(), "call_member", obj2, "return_v") == 123);
         EXPECT(CallFunction<int>(s.state(), "call_member", obj2, "return_5") == 5);
 
-#if 0
-        //TODO
+
         auto obj3 = std::make_shared<TestObj3>();
         EXPECT(CallFunction<int>(s.state(), "call_member", obj3, "return_5") == 5);
-#endif
+
 
         EXPECT(s.size() == 0);
     }

@@ -8,8 +8,6 @@
 
 namespace luabind
 {
-
-
     template<typename T>
     class MetatableCreator
     {
@@ -46,7 +44,7 @@ namespace luabind
             if (pointer == table_index())
                 return true;
 
-            if (_inheritance_parent_ids.find(pointer) != _inheritance_parent_ids.end())
+            if (_inheritance_children_ids.find(pointer) != _inheritance_children_ids.end())
                 return true;
 
             return false;
@@ -77,9 +75,18 @@ namespace luabind
             for (auto& method : ParentCreator::s_methods)
                 s_methods.insert(method);
 
-            ParentCreator::_inheritance_parent_ids.insert(table_index());
+            _parent_AddChildID.insert(&ParentCreator::AddChildID);
+            ParentCreator::AddChildID(table_index());
         }
     protected:
+        static void AddChildID(void* id)
+        {
+            _inheritance_children_ids.insert(id);
+
+            for (auto addChildId : _parent_AddChildID)
+                addChildId(id);
+        }
+
         template<typename Field>
         static void SetField(lua_State *L, const char *name, const Field& f)
         {
@@ -131,7 +138,8 @@ namespace luabind
         }
 
         const static int _registry_table_index = 0;
-        static std::set<void*> _inheritance_parent_ids;
+        static std::set<void*> _inheritance_children_ids;
+        static std::set<void(*)(void*)> _parent_AddChildID;
 
         static FunctionsList s_metamethods;
         static FunctionsList s_methods;
@@ -161,7 +169,10 @@ namespace luabind
     };
 
     template<typename T>
-    typename std::set<void*> MetatableCreator<T>::_inheritance_parent_ids;
+    typename std::set<void(*)(void*)> MetatableCreator<T>::_parent_AddChildID;
+
+    template<typename T>
+    typename std::set<void*> MetatableCreator<T>::_inheritance_children_ids;
 
     template<typename T>
     typename MetatableCreator<T>::FunctionsList MetatableCreator<T>::s_metamethods;
