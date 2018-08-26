@@ -16,25 +16,25 @@ namespace luabind
 		friend class MetatableCreator;
 
 		using lua_function = int(*) (lua_State *L);
-		using FunctionsList = std::map<const char*, lua_function>;
+		using FunctionsList = std::map<std::string, lua_function>;
 
 		MetatableCreator() {}
  
-
-
+		// return unique ID
 		static void* table_index() { return (void *)&_registry_table_index; }
 
 		static void AssignMetatable(lua_State *L)
 		{
 			//assign metatable to obj
-			PushOurTable(L);
+			PushMetaTable(L);
 			lua_setmetatable(L, -2);
 
 			//assign light userdata to obj
-			lua_pushlightuserdata(L, (void*)&_registry_table_index);
+			lua_pushlightuserdata(L, table_index());
 			lua_setuservalue(L, -2);
 		}
 
+		// Checks if object on top of the stack can be converted to instance of T
 		static bool CheckMetatable(lua_State *L)
 		{
 			lua_getuservalue(L, -1);
@@ -50,11 +50,13 @@ namespace luabind
 			return false;
 		}
 
+		// add new metamethod
 		static void AddMetamethod(const char* name, lua_function f)
 		{
 			s_metamethods.emplace( name, f );
 		}
 
+		// add new method
 		static void AddMethod(const char* name, lua_function f)
 		{
 			s_methods.emplace( name, f );
@@ -91,7 +93,7 @@ namespace luabind
 		static void SetField(lua_State *L, const char *name, const Field& f)
 		{
 			//table
-			PushOurTable(L);
+			PushMetaTable(L);
 
 			//index
 			lua_pushstring(L, name);
@@ -106,37 +108,43 @@ namespace luabind
 		}
 
 		//creates our array in registry
-		static void CreateOurTable(lua_State *L)
+		static void CreateMetaTable(lua_State *L)
 		{
 			lua_pushlightuserdata(L, table_index());
 			lua_createtable(L, 0, 0);
 
 			lua_settable(L, LUA_REGISTRYINDEX);
 
+			// create metamethod for destructor
 			auto gc_wrapper = LB_MAKE_LUA_WRAPPER([](T *t) { t->~T(); });
 			SetField(L, "__gc", gc_wrapper);
 
+			// add metamethods
 			for(auto& m : s_metamethods)
-				SetField(L, m.first, m.second);
+				SetField(L, m.first.c_str(), m.second);
 
+			// add methods under index
 			if (!s_methods.empty())
 				SetField(L, "__index", s_methods);
 		}
 
 		//pushes our array at stack
-		static void PushOurTable(lua_State *L)
+		static void PushMetaTable(lua_State *L)
 		{
+			// try to get metatable from registry
 			lua_pushlightuserdata(L, table_index());
 			auto type = lua_gettable(L, LUA_REGISTRYINDEX);
 
+			// not found - create our table and try again
 			if (type == LUA_TNIL)
 			{
 				lua_pop(L, 1);
-				CreateOurTable(L);
-				PushOurTable(L);
+				CreateMetaTable(L);
+				PushMetaTable(L);
 			}
 		}
 
+		// dummy static int, provides us with unique ID (it's address)
 		const static int _registry_table_index = 0;
 		static std::set<void*> _inheritance_children_ids;
 		static std::set<void(*)(void*)> _parent_AddChildID;
@@ -155,6 +163,16 @@ namespace luabind
 		{
 			creator::AddMethod(name, f);
 			return *this;
+		}
+
+		template<auto X>
+		auto method(const char* name)
+		{
+			auto f = [](lua_State* L) {
+				luabind::LuaStackStream ss {L};
+				return CallFromStreamResultToStream(ss, mtl::mem_fn_shared_ptr(X));
+			};
+			return method(name, f);
 		}
 
 		template<typename ParentType>

@@ -36,10 +36,3 @@ namespace luabind
 	luabind::LuaStackStream ss{ L }; \
 	return CallFromStreamResultToStream(ss, x); \
 }
-
-#define LB_WRAP_MEMBER(x) \
-[](lua_State* L) { \
-	luabind::LuaStackStream ss{ L }; \
-	return CallFromStreamResultToStream(ss, mtl::mem_fn_shared_ptr(x)); \
-}
-
