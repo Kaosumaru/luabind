@@ -13,7 +13,7 @@ namespace mtl
 		using call_type = function_traits<decltype(&F::operator())>;
 	public:
 		using return_type = typename call_type::return_type;
-        using decayed_signature = typename call_type::decayed_signature;
+		using decayed_signature = typename call_type::decayed_signature;
 
 		static constexpr std::size_t arity = call_type::arity - 1;
 
@@ -34,7 +34,7 @@ namespace mtl
 	struct function_traits<R(Args...)>
 	{
 		using return_type = R;
-        using decayed_signature = R(Args...);
+		using decayed_signature = R(Args...);
 
 		static constexpr std::size_t arity = sizeof...(Args);
 
@@ -50,15 +50,15 @@ namespace mtl
 	template<class C, class R, class... Args>
 	struct function_traits<R(C::*)(Args...)> : public function_traits<R(C&, Args...)>
 	{
-        using decayed_signature = R(Args...);
-    };
+		using decayed_signature = R(Args...);
+	};
 
 	// const member function pointer
 	template<class C, class R, class... Args>
 	struct function_traits<R(C::*)(Args...) const> : public function_traits<R(C&, Args...)>
 	{
-        using decayed_signature = R(Args...);
-    };
+		using decayed_signature = R(Args...);
+	};
 
 	// member object pointer
 	template<class C, class R>

@@ -7,58 +7,58 @@
 
 namespace luabind
 {
-    namespace impl
-    {
-        template<typename ReturnType>
-        struct ReturnInfo
-        {
-            static constexpr int arity = 1;
-            static ReturnType get(LuaStackStream &ss)
-            {
-                ReturnType r;
-                ss >> r;
-                return r;
-            }
-        };
+	namespace impl
+	{
+		template<typename ReturnType>
+		struct ReturnInfo
+		{
+			static constexpr int arity = 1;
+			static ReturnType get(LuaStackStream &ss)
+			{
+				ReturnType r;
+				ss >> r;
+				return r;
+			}
+		};
 
-        template<>
-        struct ReturnInfo<void>
-        {
-            static constexpr int arity = 0;
-            static void get(LuaStackStream &ss) { }
-        };
+		template<>
+		struct ReturnInfo<void>
+		{
+			static constexpr int arity = 0;
+			static void get(LuaStackStream &ss) { }
+		};
 
-    }
+	}
 
-    template<typename ReturnType, typename ...Args>
-    ReturnType CallFunction(lua_State* lua, const char* function_name, Args&&... args)
-    {
-        LuaStackStream ss{ lua };
+	template<typename ReturnType, typename ...Args>
+	ReturnType CallFunction(lua_State* lua, const char* function_name, Args&&... args)
+	{
+		LuaStackStream ss{ lua };
 
-        int result = lua_getglobal(lua, function_name);
+		int result = lua_getglobal(lua, function_name);
 
-        auto fill_args = { 0,
-            ((ss << args), 0)...
-        };
+		auto fill_args = { 0,
+			((ss << args), 0)...
+		};
 
-        using ReturnInfo = impl::ReturnInfo<ReturnType>;
-        static constexpr int arity = sizeof...(args);
+		using ReturnInfo = impl::ReturnInfo<ReturnType>;
+		static constexpr int arity = sizeof...(args);
 
-        lua_call(lua, arity, ReturnInfo::arity);
+		lua_call(lua, arity, ReturnInfo::arity);
 
-        return ReturnInfo::get(ss);
-    }
+		return ReturnInfo::get(ss);
+	}
 };
 
 #define LB_MAKE_LUA_WRAPPER(x) \
 [](lua_State* L) { \
-    luabind::LuaStackStream ss{ L }; \
-    return CallFromStreamResultToStream(ss, x); \
+	luabind::LuaStackStream ss{ L }; \
+	return CallFromStreamResultToStream(ss, x); \
 }
 
 #define LB_WRAP_MEMBER(x) \
 [](lua_State* L) { \
-    luabind::LuaStackStream ss{ L }; \
-    return CallFromStreamResultToStream(ss, mtl::mem_fn_shared_ptr(x)); \
+	luabind::LuaStackStream ss{ L }; \
+	return CallFromStreamResultToStream(ss, mtl::mem_fn_shared_ptr(x)); \
 }
 

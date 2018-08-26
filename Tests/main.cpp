@@ -8,8 +8,8 @@ using namespace std;
 
 lest::tests& specification()
 {
-    static lest::tests tests;
-    return tests;
+	static lest::tests tests;
+	return tests;
 }
 
 int main (int argc, char * argv[])
