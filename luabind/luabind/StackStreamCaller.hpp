@@ -46,12 +46,8 @@ protected:
 		//create tuple with types from Args
 		std::tuple< std::decay_t<Args>... > args;
 
-		//fills this tuple from stream (since arguments are placed on stack, we are first reading last element)
-		//since fold expressions are distant future, and we need to call "s >> std::get< X >(args)" in specific order,
-		//we construct a dummy table of zeroes, with our expression evaluated as side effect. Array constructors are guaranteed to be evaluated in order.
-		auto fill_args = { 0,
-			((s >> std::get<arity_dec - Is>(args)), 0)...
-		};
+		//copy arguments from lua stack to tuple
+		((s >> std::get<arity_dec - Is>(args)), ...);
 
 		//calls Function with arguments from tuple
 		return f(std::get<Is>(args)...);
@@ -73,41 +69,21 @@ auto CallFromStream(Stream& stream, const Func& func)
 }
 
 
-
-namespace CallFromStreamResultToStream_impl
-{
-	template<typename R>
-	struct Caller
-	{
-		template <typename Stream, typename Func>
-		static int Call(Stream& stream, const Func& func)
-		{
-			using traits = mtl::function_traits<Func>;
-			using Signature = typename traits::decayed_signature;
-			stream << StackStreamCaller<Stream, Signature>().Call(stream, func);
-			return 1;
-		}
-	};
-
-	template<>
-	struct Caller<void>
-	{
-		template <typename Stream, typename Func>
-		static int Call(Stream& stream, const Func& func)
-		{
-			using traits = mtl::function_traits<Func>;
-			using Signature = typename traits::decayed_signature;
-			StackStreamCaller<Stream, Signature>().Call(stream, func);
-			return 0;
-		}
-	};
-}
-
 template <typename Stream, typename Func>
 int CallFromStreamResultToStream(Stream& stream, const Func& func)
 {
 	using traits = mtl::function_traits<Func>;
-	return CallFromStreamResultToStream_impl::Caller<traits::return_type>::Call(stream, func);
+	using Signature = typename traits::decayed_signature;
+	if constexpr (std::is_void_v<traits::return_type>)
+	{
+		StackStreamCaller<Stream, Signature>().Call(stream, func);
+		return 0;
+	}
+	else
+	{
+		stream << StackStreamCaller<Stream, Signature>().Call(stream, func);
+		return 1;
+	}
 }
 
 
